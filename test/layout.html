@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>layout probe</title>
+<!-- 纯布局探针：不用插件，直接复刻面板 DOM，测量列数 / 格子尺寸 / 每行右侧空白 -->
+<link rel="stylesheet" href="../dist/css/jquery.emoji.css">
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="emoji_container" id="c" style="display:block;top:0;left:0">
+    <div class="emoji_content">
+        <div class="emoji_icons"><ul id="u"></ul></div>
+    </div>
+    <div class="emoji_tab"></div>
+    <div class="emoji_preview"><img alt=""></div>
+</div>
+<script>
+(function () {
+    var blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    var html = '';
+    for (var i = 0; i < 164; i++) {
+        html += '<li><a><img src="' + blank + '" alt=""></a></li>';
+    }
+    var ul = document.getElementById('u');
+    ul.innerHTML = html;
+    var lis = [].slice.call(ul.querySelectorAll('li'));
+    var ur = ul.getBoundingClientRect();
+    var top0 = Math.round(lis[0].getBoundingClientRect().top);
+    var firstRowCount = lis.filter(function (li) {
+        return Math.round(li.getBoundingClientRect().top) === top0;
+    }).length;
+    var rows = {};
+    lis.forEach(function (li) {
+        var r = li.getBoundingClientRect();
+        var k = Math.round(r.top);
+        if (rows[k] === undefined || r.right > rows[k]) rows[k] = r.right;
+    });
+    var gaps = Object.keys(rows).map(function (k) { return +(ur.right - rows[k]).toFixed(1); });
+    var c = document.getElementById('c').getBoundingClientRect();
+    var cell = lis[0].getBoundingClientRect();
+    document.title = 'RESULT:' + JSON.stringify({
+        viewport: window.innerWidth,
+        container: +c.width.toFixed(1),
+        ulWidth: +ur.width.toFixed(1),
+        display: getComputedStyle(ul).display,
+        cols: firstRowCount,
+        cellW: +cell.width.toFixed(1),
+        cellH: +cell.height.toFixed(1),
+        firstRowGap: gaps[0]
+    });
+})();
+</script>
+</body>
+</html>

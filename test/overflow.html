@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>overflow probe</title>
+</head>
+<body style="margin:0">
+<!-- 在 420px 视口里加载文档页，检查是否出现页面级横向溢出。
+     运行时需要浏览器加 --allow-file-access-from-files，以便读取 file:// iframe。 -->
+<iframe id="f" src="../index.html" title="文档页" style="width:420px;height:1000px;border:0"></iframe>
+<script>
+window.addEventListener('load', function () {
+    var f = document.getElementById('f');
+    var d = f.contentDocument;
+    var w = f.contentWindow;
+    var limit = d.documentElement.clientWidth;
+    var bad = [];
+    var all = d.querySelectorAll('body *');
+    for (var i = 0; i < all.length && bad.length < 8; i++) {
+        var el = all[i];
+        var r = el.getBoundingClientRect();
+        if (r.width && r.right > limit + 1) {
+            bad.push({
+                tag: el.tagName,
+                cls: String(el.className || '').slice(0, 40),
+                id: el.id || '',
+                right: Math.round(r.right),
+                width: Math.round(r.width)
+            });
+        }
+    }
+    document.title = 'RESULT:' + JSON.stringify({
+        innerWidth: w.innerWidth,
+        scrollWidth: d.documentElement.scrollWidth,
+        clientWidth: limit,
+        theme: d.documentElement.dataset.theme,
+        overflows: bad
+    });
+});
+</script>
+</body>
+</html>
