@@ -205,6 +205,8 @@
                             if (!$(target).hasClass('selected')) {
                                 $('#emoji_container_' + ix + ' .emoji_icons').hide();
                                 $('#emoji_container_' + ix + ' #' + tab).show();
+                                // 切换分组后回到顶部，再加载新分组顶部的表情
+                                $('#emoji_container_' + ix + ' .emoji_content').scrollTop(0);
                                 $(target).addClass('selected').siblings().removeClass('selected');
                                 that._loadVisibleEmoji();
                             }

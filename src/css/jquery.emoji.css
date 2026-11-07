@@ -209,3 +209,48 @@
             box-shadow: none!important;
     border: none!important;
 }
+
+/* 容器宽度自适应时，让列数自动计算、列宽均分，避免每行右侧留白 */
+@supports (display: grid) {
+    /* Grid 下不能再靠内容撑出宽度，改由 left/right 决定，保持原本的自适应范围。
+       left:0 是兜底，插件定位时写入的 inline left 会覆盖它 */
+    .emoji_container {
+        left: 0;
+        right: 10px;
+        margin-right: 0;
+    }
+    .emoji_content ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+        padding: 0;
+        border-top: 1px solid #e3e3e3;
+        border-left: 1px solid #e3e3e3;
+    }
+    .emoji_content ul li {
+        display: block;
+        float: none;
+        width: auto;
+        height: 54px;
+        margin: 0;
+        border: 0;
+        border-right: 1px solid #e3e3e3;
+        border-bottom: 1px solid #e3e3e3;
+    }
+
+    /* 小屏幕缩小格子，一行可以多排几个表情 */
+    @media (max-width: 576px) {
+        .emoji_content ul {
+            grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+        }
+        .emoji_content ul li {
+            height: 46px;
+        }
+        .emoji_content ul li a {
+            line-height: 46px;
+        }
+        .emoji_content ul li a img {
+            max-width: 100%;
+            max-height: 30px;
+        }
+    }
+}
