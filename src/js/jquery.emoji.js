@@ -404,7 +404,166 @@
         VERSION = '1.2.0',
         DEFAULTS = {
             icons: []
+        },
+        // 占位符中代表表情代码的 {alias}，大小写不敏感
+        ALIAS_RE = /\{alias\}/i,
+        // 这些元素里的文本不是正文，替换会破坏脚本、样式、代码或表单内容
+        SKIP_TAGS = ['script', 'style', 'noscript', 'iframe', 'textarea',
+                     'select', 'title', 'pre', 'code'];
+
+    // 正则元字符转义：占位符中除 {alias} 以外的部分一律按字面量匹配
+    function escapeRegExp(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function joinPath(basePath, groupPath) {
+        if (!basePath) return groupPath;
+        return basePath.replace(/\/+$/, '') + '/' + groupPath.replace(/^\/+/, '');
+    }
+
+    /**
+     * 把一组表情配置编译成一条匹配规则。
+     * {alias} 只匹配「已配置的别名」或「纯数字」，不再吞掉任意字符。
+     */
+    function buildRule(group, basePath, index) {
+        var groupPath = group.path;
+        if (typeof groupPath !== 'string' || !groupPath) {
+            console.error('第 ' + index + ' 组表情未配置图片路径 path');
+            return null;
+        }
+
+        var placeholder = group.placeholder;
+        if (typeof placeholder !== 'string' || !ALIAS_RE.test(placeholder)) {
+            console.error('第 ' + index + ' 组表情未配置含 {alias} 的 placeholder');
+            return null;
+        }
+
+        var emoji = group.emoji || null;
+        if (emoji && typeof emoji !== 'object') {
+            console.error('第 ' + index + ' 组 emoji 参数设置不正确');
+            return null;
+        }
+
+        var aliasSource, resolve, named = !!emoji;
+        if (named) {
+            var names = [];
+            $.each(emoji, function (key, value) {
+                if (Object.prototype.hasOwnProperty.call(emoji, key) &&
+                    typeof value === 'string' && value) {
+                    names.push(key);
+                }
+            });
+            // 长别名优先，避免「笑」抢先匹配掉「笑哭」
+            names.sort(function (a, b) { return b.length - a.length; });
+            if (!names.length) return null;
+
+            var alternatives = [];
+            for (var n = 0; n < names.length; n++) {
+                alternatives.push(escapeRegExp(names[n]));
+            }
+            aliasSource = '(?:' + alternatives.join('|') + ')';
+            resolve = function (alias) { return emoji[alias]; };
+        } else {
+            aliasSource = '\\d+';
+            resolve = function (alias) { return alias; };
+        }
+
+        var literals = placeholder.split(ALIAS_RE);
+        var source = '';
+        for (var p = 0; p < literals.length; p++) {
+            source += escapeRegExp(literals[p]);
+            if (p < literals.length - 1) source += '(' + aliasSource + ')';
+        }
+
+        return {
+            order: index,
+            regexp: new RegExp(source, 'g'),
+            aliasCount: literals.length - 1,
+            named: named,
+            resolve: resolve,
+            path: joinPath(basePath, groupPath),
+            file: group.file || '.jpg'
         };
+    }
+
+    // 只收集正文文本节点：HTML 属性、脚本、代码块等一概不碰
+    function collectTextNodes(root, list) {
+        var children = root.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (child.nodeType === 3) {
+                if (child.nodeValue) list.push(child);
+            } else if (child.nodeType === 1 &&
+                       $.inArray(child.nodeName.toLowerCase(), SKIP_TAGS) === -1) {
+                collectTextNodes(child, list);
+            }
+        }
+    }
+
+    /**
+     * 在单个文本节点内找出所有表情代码，按位置去重后一次性替换为 <img>。
+     * 用 DOM API 生成节点，别名、路径里的引号不会破坏 HTML 结构。
+     */
+    function replaceInTextNode(node, rules, doc) {
+        var text = node.nodeValue;
+        var hits = [];
+        var i, g, match, alias, file;
+
+        for (i = 0; i < rules.length; i++) {
+            var rule = rules[i];
+            rule.regexp.lastIndex = 0;
+            while ((match = rule.regexp.exec(text)) !== null) {
+                if (!match[0].length) {
+                    rule.regexp.lastIndex++;
+                    continue;
+                }
+                alias = '';
+                for (g = 1; g <= rule.aliasCount; g++) {
+                    if (match[g] !== undefined) { alias = match[g]; break; }
+                }
+                file = rule.resolve(alias);
+                if (!file) continue;
+                hits.push({
+                    start: match.index,
+                    end: match.index + match[0].length,
+                    rule: rule,
+                    alias: alias,
+                    file: file
+                });
+            }
+        }
+        if (!hits.length) return;
+
+        // 同一位置优先取更长的匹配，其次取配置中靠前的组；重叠区间只替换一次
+        hits.sort(function (a, b) {
+            return a.start - b.start ||
+                   (b.end - b.start) - (a.end - a.start) ||
+                   a.rule.order - b.rule.order;
+        });
+
+        var frag = doc.createDocumentFragment();
+        var cursor = 0;
+        for (i = 0; i < hits.length; i++) {
+            var hit = hits[i];
+            if (hit.start < cursor) continue;
+            if (hit.start > cursor) {
+                frag.appendChild(doc.createTextNode(text.slice(cursor, hit.start)));
+            }
+            var img = doc.createElement('img');
+            img.className = 'wp-smiley';
+            img.setAttribute('src', hit.rule.path + hit.file + hit.rule.file);
+            if (hit.rule.named) {
+                img.setAttribute('title', hit.alias);
+                img.setAttribute('alt', hit.alias);
+            }
+            frag.appendChild(img);
+            cursor = hit.end;
+        }
+        if (cursor < text.length) {
+            frag.appendChild(doc.createTextNode(text.slice(cursor)));
+        }
+        node.parentNode.replaceChild(frag, node);
+    }
 
     function Plugin(element, options) {
         this.$content = $(element);
@@ -414,61 +573,24 @@
 
     Plugin.prototype = {
         _init: function () {
-            var that = this;
-            var contentHTML = this.$content[0].innerHTML;
-            var iconsGroup = this.options.icons;
-            var basePath = this.options.basePath;
-            var groupLength = iconsGroup.length;
-            var path,
-                file,
-                placeholder,
-                emoji,
-                pattern,
-                regexp;
-            
-            if (groupLength <= 0) return;   // 没有表情包
-            
-            for (var i = 0; i < groupLength; i++) {
-                path = basePath + '/' + iconsGroup[i].path;
-                file = iconsGroup[i].file || '.jpg';
-                placeholder = iconsGroup[i].placeholder;
-                // http://www.jb51.net/article/31478.htm
-                placeholder = placeholder.replace('[', '\\[');
-                placeholder = placeholder.replace(']', '\\]');
-                // placeholder = placeholder.replace('\\', '\\\');
-                placeholder = placeholder.replace('(', '\\(');
-                placeholder = placeholder.replace(')', '\\)');
-                
-                if (!path) {
-                    console.error('第 ' + i + ' 组表情未配置图片路径 path');
-                    continue;
-                }
-                
-                emoji = iconsGroup[i].emoji;
-                if (emoji) {
-                    // 指定了名称的表情
-                    if (typeof emoji !== 'object') {
-                        console.error('第 ' + i + ' 组 emoji 参数设置不正确');
-                        continue;
-                    }
-                    
-                    pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '([\\s\\S]+?)');
-                    contentHTML = contentHTML.replace(new RegExp(pattern, 'gm'), function($0, $1) {
-                        var n = emoji[$1];
-                        if (n) {
-                            return '<img class="wp-smiley" src="' + path + n + file + '" title="' + $1 + '" alt="' + $1 + '"/>';
-                        } else {
-                            return $0;
-                        }
-                    });
-                } else {
-                    // 按顺序的表情
-                    pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '(\\d+?)');
-                    contentHTML = contentHTML.replace(new RegExp(pattern, 'gm'), '<img class="wp-smiley" src="' + path + '$1' + file + '"/>');
-                }
+            var root = this.$content[0];
+            var groups = this.options.icons;
+            if (!root || !groups || groups.length <= 0) return;   // 没有表情包
+
+            var basePath = typeof this.options.basePath === 'string' ? this.options.basePath : '';
+            var rules = [];
+            for (var i = 0; i < groups.length; i++) {
+                var rule = buildRule(groups[i], basePath, i);
+                if (rule) rules.push(rule);
             }
-            
-            that.$content[0].innerHTML = contentHTML;
+            if (!rules.length) return;
+
+            var nodes = [];
+            collectTextNodes(root, nodes);
+            var doc = root.ownerDocument || document;
+            for (var j = 0; j < nodes.length; j++) {
+                replaceInTextNode(nodes[j], rules, doc);
+            }
         }
     };
     
