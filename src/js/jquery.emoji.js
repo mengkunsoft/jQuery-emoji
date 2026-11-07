@@ -6,6 +6,8 @@
 
     var PLUGIN_NAME = 'emoji',
         VERSION = '1.1.1',
+        BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+        LOAD_BUFFER = 100,
         DEFAULTS = {
             showTab: true,
             animation: 'fade',
@@ -49,9 +51,7 @@
             var btn = this.options.button;
             var newBtn,
                 contentTop,
-                contentLeft,
-                btnTop,
-                btnLeft;
+                contentLeft;
             var ix = that.index;
             if (!btn) {
                 newBtn = '<input type="image" class="emoji_btn" id="emoji_btn_' + ix + '" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZBAMAAAA2x5hQAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAkUExURUxpcfTGAPTGAPTGAPTGAPTGAPTGAPTGAPTGAPTGAPTGAPTGAOfx6yUAAAALdFJOUwAzbVQOoYrzwdwkAoU+0gAAAM1JREFUGNN9kK0PQWEUxl8fM24iCYopwi0muuVuzGyKwATFZpJIU01RUG/RBMnHxfz+Oef9uNM84d1+23nO+zxHKVG2WWupRJkdcAwtpCK0lpbqWE01pB0QayonREMoIp7AawQrWSgGGb4pn6dSeSh68FAVXqHqy3wKrkJiDGDTg3dnp//w+WnwlwIOJauF+C7sXRVfdha4O4oIJfTbtdSxs2uqhs585A0ko8iLTMEcDE1n65A+29pYAlr72nz9dKu7GuNTcsL2fDQzB/wCPVJ69nZGb3gAAAAASUVORK5CYII="/>';
@@ -103,7 +103,7 @@
                 if (emoji) {    // 指定了emoji 数组
                     if (typeof emoji !== 'object') {
                         console.error('第 ' + i + ' 组 emoji 参数设置不正确');
-                        break;
+                        continue;
                     }
                     
                     maxNum = maxNum || emoji.length;
@@ -118,13 +118,13 @@
                         
                         notation = placeholder.replace(new RegExp('{alias}', 'gi'), tmp.toString());
                         panel += '<li><a data-emoji_code="' + notation + '" data-index="' + index + '" title="' + tmp +
-                        '"><img src="' + path + emoji[tmp] + file + '"/></a></li>';
+                        '"><img src="' + BLANK_IMG + '" data-src="' + path + emoji[tmp] + file + '" alt=""/></a></li>';
                     }
                     
                     
                 } else {
                     if(!maxNum) {
-                        console.error('请指定 ' + i + ' 组表情 maxNum');
+                        console.error('请指定第 ' + i + ' 组表情的 maxNum 或 emoji 参数');
                         continue;
                     }
                     
@@ -135,7 +135,7 @@
                         }
                         
                         notation = placeholder.replace(new RegExp('{alias}', 'gi'), j.toString());
-                        panel += '<li><a data-emoji_code="' + notation + '" data-index="' + j + '"><img src="' + path + j + file + '"/></a></li>';
+                        panel += '<li><a data-emoji_code="' + notation + '" data-index="' + j + '"><img src="' + BLANK_IMG + '" data-src="' + path + j + file + '" alt=""/></a></li>';
                     }
                 }
                 
@@ -152,12 +152,18 @@
             emoji_container += emoji_preview;
 
             $(emoji_container).appendTo($('body'));
-
-            btnTop = $(btn).offset().top + $(btn).outerHeight() + 5;
-            btnLeft = $(btn).offset().left;
-            $('#emoji_container_' + ix).css({'top': btnTop + 'px', 'left': btnLeft + 'px'});
-
             
+            // 面板滚动、窗口滚动或尺寸变化时，只加载进入可视区域的表情图片
+            var loadTimer;
+            var scheduleLoad = function () {
+                clearTimeout(loadTimer);
+                loadTimer = setTimeout(function () {
+                    that._loadVisibleEmoji();
+                }, 50);
+            };
+            $('#emoji_container_' + ix + ' .emoji_content').on('scroll.emoji', scheduleLoad);
+            $(window).on('scroll.emoji' + ix + ' resize.emoji' + ix, scheduleLoad);
+            scheduleLoad();
 
             var pageCount = groupLength % 8 === 0 ? parseInt(groupLength / 8) : parseInt(groupLength / 8) + 1;
             var pageIndex = 1;
@@ -170,14 +176,23 @@
                         imgSrc,
                         insertHtml;
                     if (target === $(btn)[0]) {
-                        $('#emoji_container_' + ix)[that.toggleFunc]();
+                        // 后续点击
+                        var btnTop = $(btn).offset().top + $(btn).outerHeight() + 5;
+                        var btnLeft = $(btn).offset().left;
+                        
+                        /* RTL 布局 */
+                        // btnLeft = btnLeft - $('#emoji_container_' + ix).width() + $(btn).width();
+                        
+                        $('#emoji_container_' + ix).css({'top': btnTop + 'px', 'left': btnLeft + 'px'});
+                        // 走 toggle()，动画结束后才会触发可视区域图片的加载
+                        that.toggle();
                         // that.$content.focus();
                     } else if ($(target).parents('#emoji_container_' + ix).length > 0) {
                         code = $(target).data('emoji_code') || $(target).parent().data('emoji_code');
                         tab = $(target).data('emoji_tab');
                         if (code) {
                             if (field.nodeName === 'DIV') {
-                                imgSrc = $('#emoji_container_' + ix + ' a[data-emoji_code="' + code + '"] img').attr('src');
+                                imgSrc = that._loadEmoji($(target).closest('#emoji_container_' + ix + ' a[data-emoji_code]').find('img')[0]);
                                 insertHtml = '<img class="emoji_icon" src="' + imgSrc + '"/>';
                                 that._insertAtCursor(field, insertHtml, false);
                             } else {
@@ -191,6 +206,7 @@
                                 $('#emoji_container_' + ix + ' .emoji_icons').hide();
                                 $('#emoji_container_' + ix + ' #' + tab).show();
                                 $(target).addClass('selected').siblings().removeClass('selected');
+                                that._loadVisibleEmoji();
                             }
                         } else if ($(target).hasClass('emoji_tab_prev')) {
                             if (pageIndex > 1) {
@@ -218,7 +234,7 @@
                 } else {
                     $('#emoji_container_' + ix + ' .emoji_preview').css({'left': 0, 'right': 'auto'});
                 }
-                var src = $(this).find('img').attr('src');
+                var src = that._loadEmoji($(this).find('img')[0]);
                 $('#emoji_container_' + ix + ' .emoji_preview img').attr('src', src).parent().show();
             });
 
@@ -227,6 +243,52 @@
             });
             
             
+        },
+
+        // 把真实地址写入 src，加载单个表情
+        _loadEmoji: function (img) {
+            if (!img) {
+                return '';
+            }
+            var src = img.getAttribute('data-src');
+            if (src) {
+                img.setAttribute('src', src);
+                img.removeAttribute('data-src');
+            }
+            return img.getAttribute('src');
+        },
+
+        // 只加载当前分组中落在可视区域（含少量缓冲）内的表情
+        _loadVisibleEmoji: function () {
+            var $container = $('#emoji_container_' + this.index);
+            if (!$container.is(':visible')) {
+                return;
+            }
+            var $content = $container.find('.emoji_content');
+            var $panel = $content.find('.emoji_icons:visible');
+            if (!$content.length || !$panel.length) {
+                return;
+            }
+            var box = $content[0].getBoundingClientRect();
+            var viewH = $(window).height();
+            var viewW = $(window).width();
+            var top = Math.max(box.top, 0) - LOAD_BUFFER;
+            var bottom = Math.min(box.bottom, viewH) + LOAD_BUFFER;
+            var left = Math.max(box.left, 0) - LOAD_BUFFER;
+            var right = Math.min(box.right, viewW) + LOAD_BUFFER;
+            if (top >= bottom || left >= right) {
+                return;
+            }
+            var pending = [];
+            $panel.find('img[data-src]').each(function () {
+                var rect = this.getBoundingClientRect();
+                if (rect.bottom >= top && rect.top <= bottom && rect.right >= left && rect.left <= right) {
+                    pending.push(this);
+                }
+            });
+            for (var i = 0; i < pending.length; i++) {
+                this._loadEmoji(pending[i]);
+            }
         },
 
         _insertAtCursor: function (field, value, selectPastedContent) {
@@ -296,7 +358,10 @@
         },
 
         show: function () {
-            $('#emoji_container_' + this.index)[this.showFunc]();
+            var that = this;
+            $('#emoji_container_' + this.index)[this.showFunc]().promise().done(function () {
+                that._loadVisibleEmoji();
+            });
         },
 
         hide: function () {
@@ -304,7 +369,10 @@
         },
 
         toggle: function () {
-            $('#emoji_container_' + this.index)[this.toggleFunc]();
+            var that = this;
+            $('#emoji_container_' + this.index)[this.toggleFunc]().promise().done(function () {
+                that._loadVisibleEmoji();
+            });
         }
     };
 
@@ -325,10 +393,13 @@
 
 }(jQuery, window, document));
 
+/**
+ * 表情包解析
+ */
 (function ($, window, document) {
 
     var PLUGIN_NAME = 'emojiParse',
-        VERSION = '1.1.1',
+        VERSION = '1.2.0',
         DEFAULTS = {
             icons: []
         };
@@ -342,6 +413,7 @@
     Plugin.prototype = {
         _init: function () {
             var that = this;
+            var contentHTML = this.$content[0].innerHTML;
             var iconsGroup = this.options.icons;
             var basePath = this.options.basePath;
             var groupLength = iconsGroup.length;
@@ -351,48 +423,50 @@
                 emoji,
                 pattern,
                 regexp;
-            if (groupLength > 0) {
+            
+            if (groupLength <= 0) return;   // 没有表情包
+            
+            for (var i = 0; i < groupLength; i++) {
+                path = basePath + '/' + iconsGroup[i].path;
+                file = iconsGroup[i].file || '.jpg';
+                placeholder = iconsGroup[i].placeholder;
+                // http://www.jb51.net/article/31478.htm
+                placeholder = placeholder.replace('[', '\\[');
+                placeholder = placeholder.replace(']', '\\]');
+                // placeholder = placeholder.replace('\\', '\\\');
+                placeholder = placeholder.replace('(', '\\(');
+                placeholder = placeholder.replace(')', '\\)');
                 
-                for (var i = 0; i < groupLength; i++) {
-                    path = basePath + '/' + iconsGroup[i].path;
-                    file = iconsGroup[i].file || '.jpg';
-                    placeholder = iconsGroup[i].placeholder;
-                    placeholder = placeholder.replace('[', '\\[');
-                    placeholder = placeholder.replace(']', '\\]');
-                    placeholder = placeholder.replace('(', '\\(');
-                    placeholder = placeholder.replace(')', '\\)');
-                    
-                    emoji = iconsGroup[i].emoji;
-                    if (!path) {
-                        console.error('第 ' + i + ' 组表情未配置图片路径 path');
+                if (!path) {
+                    console.error('第 ' + i + ' 组表情未配置图片路径 path');
+                    continue;
+                }
+                
+                emoji = iconsGroup[i].emoji;
+                if (emoji) {
+                    // 指定了名称的表情
+                    if (typeof emoji !== 'object') {
+                        console.error('第 ' + i + ' 组 emoji 参数设置不正确');
                         continue;
                     }
                     
-                    if (emoji) {
-                        
-                        if (typeof emoji !== 'object') {
-                            console.error('第 ' + i + ' 组 emoji 参数设置不正确');
-                            break;
+                    pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '([\\s\\S]+?)');
+                    contentHTML = contentHTML.replace(new RegExp(pattern, 'gm'), function($0, $1) {
+                        var n = emoji[$1];
+                        if (n) {
+                            return '<img class="wp-smiley" src="' + path + n + file + '" title="' + $1 + '" alt="' + $1 + '"/>';
+                        } else {
+                            return $0;
                         }
-                        
-                        pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '([\\s\\S]+?)');
-                        
-                        regexp = new RegExp(pattern, 'gm');
-                        that.$content.html(that.$content.html().replace(regexp, function ($0, $1) {
-                            var n = emoji[$1];
-                            if (n) {
-                                return '<img class="wp-smiley" src="' + path + n + file + '" title="' + $1 + '" alt="' + $1 + '"/>';
-                            } else {
-                                return $0;
-                            }
-                        }));
-                    } else {
-                        pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '(\\d+?)');
-                        that.$content.html(that.$content.html().replace(new RegExp(pattern, 'gm'), '<img class="wp-smiley" src="' + path + '$1' + file + '"/>'));
-                    }
-                    
+                    });
+                } else {
+                    // 按顺序的表情
+                    pattern = placeholder.replace(new RegExp('{alias}', 'gi'), '(\\d+?)');
+                    contentHTML = contentHTML.replace(new RegExp(pattern, 'gm'), '<img class="wp-smiley" src="' + path + '$1' + file + '"/>');
                 }
             }
+            
+            that.$content[0].innerHTML = contentHTML;
         }
     };
     
