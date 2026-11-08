@@ -6,6 +6,8 @@
 
 A zero-dependency custom emoji picker for `textarea` and `contenteditable`, with emoticon-code parsing. No jQuery, no framework, no network requests.
 
+![预览图](https://github.com/user-attachments/assets/13ff8d17-a56b-422d-90a2-319059f8a5d4)
+
 > v2 起改名为 **mk-emoji-picker**，全面重写为原生 JavaScript，与 v1（jQuery-emoji）的 API 不兼容。迁移见文末。
 
 ## 预览
@@ -198,6 +200,38 @@ String html = parser.parse(content);
 规则与前端完全对齐：占位符除 `{alias}` 外按字面量匹配、`{alias}` 大小写不敏感、长别名优先、重叠位置取更长匹配、同一位置只替换一次。后端是无状态纯函数，没有前端的 `data-mkep-parsed` 幂等标记，重复调用会重新处理输入。
 
 `test/server.test.js` 用 11 组用例对比 PHP / Java / JS 三端输出；CI 通过 `setup-php` 与 `setup-java` 提供运行时，并在 server job 设置 `MKEP_REQUIRE_PHP` / `MKEP_REQUIRE_JAVA`，运行时缺失时直接失败、不会静默跳过；本机缺少 JDK 时 Java 用例自动跳过。
+
+## WordPress 插件
+
+仓库附带一个可直接安装到 WordPress 的插件，把服务端解析与前端面板接到评论系统：
+
+- 服务端把评论（可选文章、摘要）里的表情代码转成 `<img>`，不依赖前端脚本；
+- 在评论表单文本域后追加表情按钮，点击打开多分组、懒加载的表情面板；
+- 停用 WordPress 自带的 `convert_smilies`，避免 `:)` 一类代码被抢先替换；
+- 设置页（设置 → MK Emoji Picker）可配置解析位置、图片目录 URL、附加 CSS 类与纯文本模式；
+- 前后端与 PHP / Java 解析器共用同一份 `assets/emoji-list.json`。
+
+构建与安装：
+
+```bash
+npm run build:wp
+```
+
+生成 `wordpress/mk-emoji-picker/` 与 `wordpress/mk-emoji-picker-2.0.0.zip`。脚本把 `dist/` 的前端产物、`server/php/EmojiParser.php` 和 `images/emoji/` 下的 510 张图片复制进插件目录；上传 zip 或把该目录放到 `wp-content/plugins/` 后启用即可。构建产物不入库，插件源码保留在 `wordpress/src/`。
+
+| 设置项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `parse_comments` | 开 | 解析评论内容。 |
+| `parse_content` / `parse_excerpt` | 关 | 解析文章正文 / 摘要。 |
+| `disable_core_smilies` | 开 | 移除 `convert_smilies` 过滤器。 |
+| `enable_picker` | 开 | 评论框表情按钮与前端资源。 |
+| `image_base_url` | 空 | 留空使用插件自带 `images/emoji/`，也可指向 CDN。 |
+| `class_name` | 空 | 追加到 `<img>` 的 CSS 类；沿用主题表情样式可填 `wp-smiley`。 |
+| `escape_html` | 关 | 开启后按纯文本转义输入；WordPress 内容已是合法 HTML，通常保持关闭。 |
+
+开发者接口：模板函数 `mkep_parse_text( $text, $options )`（`$options` 可覆盖 `basePath` / `className` / `escape` / `icons`），以及过滤器 `mkep_options`、`mkep_parse_options`、`mkep_base_path`、`mkep_should_enqueue`。
+
+`test/wordpress.test.js` 用 WordPress 函数桩在 Node 里驱动 PHP 源码，覆盖过滤器注册、解析输出、设置项净化、资源加载与 ZIP 结构；CI 的 server job 会同时验证 PHP / Java / WordPress 三端。
 
 ## 主题定制
 

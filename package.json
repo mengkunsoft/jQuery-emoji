@@ -32,9 +32,10 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:wp": "node scripts/build-wordpress.mjs",
     "lint": "eslint .",
     "pretest": "npm run build",
-    "test": "node --test test/api.test.js test/layout.test.js test/lazyload.test.js test/page.test.js test/parse.test.js test/server.test.js",
+    "test": "node --test test/api.test.js test/layout.test.js test/lazyload.test.js test/page.test.js test/parse.test.js test/server.test.js test/wordpress.test.js",
     "check": "npm run lint && npm test",
     "prepublishOnly": "npm run build"
   },

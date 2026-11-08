@@ -2,7 +2,14 @@ import globals from 'globals';
 
 export default [
     {
-        ignores: ['dist/**', 'images/**', 'lib/**', 'node_modules/**', 'coverage/**']
+        ignores: [
+            'dist/**',
+            'images/**',
+            'lib/**',
+            'node_modules/**',
+            'coverage/**',
+            'wordpress/mk-emoji-picker/**'
+        ]
     },
     {
         files: ['**/*.js', '**/*.mjs'],

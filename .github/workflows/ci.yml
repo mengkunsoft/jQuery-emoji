@@ -47,8 +47,9 @@ jobs:
           java-version: '17'
       - run: npm ci
       - run: npm run build
-      - name: PHP / Java 与前端解析一致性
+      - run: npm run build:wp
+      - name: PHP / Java / WordPress 一致性
         env:
           MKEP_REQUIRE_PHP: '1'
           MKEP_REQUIRE_JAVA: '1'
-        run: node --test test/server.test.js
+        run: node --test test/server.test.js test/wordpress.test.js

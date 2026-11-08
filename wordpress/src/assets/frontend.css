@@ -1,0 +1,39 @@
+/*! MK Emoji Picker | WordPress 集成样式 */
+
+.mkep-wp-trigger-wrap {
+    margin: 8px 0 0;
+}
+
+.mkep-wp-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    background: #f6f7f7;
+    color: #1d2327;
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.mkep-wp-trigger:hover,
+.mkep-wp-trigger:focus-visible {
+    border-color: #2271b1;
+    background: #fff;
+    color: #2271b1;
+}
+
+.mkep-wp-trigger-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* 让生成的表情图片跟随行高，不沿用主题对固定尺寸表情的假设 */
+.mkep-smiley {
+    width: auto;
+    height: auto;
+    max-height: 2em;
+    vertical-align: middle;
+}
