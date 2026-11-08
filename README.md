@@ -10,7 +10,9 @@ A zero-dependency custom emoji picker for `textarea` and `contenteditable`, with
 
 ## 预览
 
-打开仓库里的 `index.html` 即可体验。
+在线预览：https://mengkunsoft.github.io/mk-emoji-picker/
+
+也可以直接打开仓库里的 `index.html` 体验。
 
 ## 特性
 
@@ -129,9 +131,73 @@ const { emojiLists } = require('mk-emoji-picker/emoji-list');
 
 ### `parse(target, options) → Element`
 
-把元素内的表情代码替换为 `<img class="mkep-smiley wp-smiley">`，返回该元素。默认每个元素只解析一次（打 `data-mkep-parsed` 标记）；`options.force = true` 可强制重解析。`options` 支持 `basePath`、`icons`，以及内部测试用的 `document`。
+把元素内的表情代码替换为 `<img class="mkep-smiley">`，返回该元素。默认每个元素只解析一次（打 `data-mkep-parsed` 标记）；`options.force = true` 可强制重解析。
 
-`wp-smiley` 作为兼容钩子保留，方便沿用旧样式。
+`options` 支持 `basePath`、`icons`、`className`、`force`，以及内部测试用的 `document`。`className` 会追加到生成的图片上，支持空格分隔的字符串或字符串数组，自动忽略空值与非字符串、并去重：
+
+```js
+parse('#comment', {
+    basePath: '/images/emoji',
+    icons: emojiLists,
+    className: 'comment-emoji rounded'   // 也可传 ['comment-emoji', 'rounded']
+});
+```
+
+> v2 起不再生成 `wp-smiley` 兼容类；需要沿用旧样式时，把 `className: 'wp-smiley'` 传给 `parse()` 即可。
+
+## 后端解析（PHP / Java）
+
+服务端渲染时可直接把数据库里的表情代码转换成 `<img>`，不必让前端再解析一次。三端共用同一份配置：`npm run build` 从 `src/js/emoji-list.js` 生成 `dist/emoji-list.json`（含 `name` / `version` / `groups`），该文件随 npm 包一起发布。
+
+| 文件 | 运行环境 | 第三方依赖 |
+| --- | --- | --- |
+| `server/php/EmojiParser.php` | PHP 7.4+ | 无（仅内置 json / pcre） |
+| `server/java/EmojiParser.java` | Java 8+ | 无（内置精简 JSON 读取器） |
+
+两个解析器和 `dist/emoji-list.json` 都随 npm 包发布，安装后位于 `node_modules/mk-emoji-picker/server/`，可直接复制到服务端项目中。
+
+PHP：
+
+```php
+use MkEmojiPicker\EmojiParser;
+require __DIR__ . '/EmojiParser.php';   // 把 server/php/EmojiParser.php 复制到项目中
+
+$parser = EmojiParser::fromJsonFile(__DIR__ . '/dist/emoji-list.json', [
+    'basePath' => '/images/emoji',
+    'className' => 'comment-emoji'
+]);
+echo $parser->parse($row['content']);
+```
+
+Java（`EmojiParser` 使用默认包，可按需加 `package` 声明）：
+
+```java
+Map<String, Object> options = new HashMap<>();
+options.put("basePath", "/images/emoji");
+options.put("className", "comment-emoji");
+
+EmojiParser parser = EmojiParser.fromJson(Paths.get("dist/emoji-list.json"), options);
+String html = parser.parse(content);
+```
+
+输出与前端 `parse()` 一致，属性顺序固定：
+
+```html
+<img class="mkep-smiley comment-emoji" src="/images/emoji/qq/weixiao.gif" alt="微笑" loading="lazy" decoding="async" title="微笑">
+```
+
+`options`：
+
+| 参数 | 说明 |
+| --- | --- |
+| `basePath` | 图片根路径，尾部斜杠自动归一。 |
+| `icons` | 覆盖配置里的 `groups`；不读 JSON 时也可直接构造传入。 |
+| `className` | 追加自定义类，支持空格分隔字符串或数组，自动去重。 |
+| `escape` | 默认 `true`：输入按纯文本处理，非表情内容一律 HTML 转义，适合评论等原始文本。设为 `false` 时按 HTML 片段处理，用轻量 tokenizer 跳过 `<script>` / `<style>` / `<textarea>` / `<pre>` / `<code>` 等整块及所有标签属性，只替换正文文本——**仅用于可信或已净化的 HTML**。 |
+
+规则与前端完全对齐：占位符除 `{alias}` 外按字面量匹配、`{alias}` 大小写不敏感、长别名优先、重叠位置取更长匹配、同一位置只替换一次。后端是无状态纯函数，没有前端的 `data-mkep-parsed` 幂等标记，重复调用会重新处理输入。
+
+`test/server.test.js` 用 11 组用例对比 PHP / Java / JS 三端输出；CI 通过 `setup-php` 与 `setup-java` 提供运行时，并在 server job 设置 `MKEP_REQUIRE_PHP` / `MKEP_REQUIRE_JAVA`，运行时缺失时直接失败、不会静默跳过；本机缺少 JDK 时 Java 用例自动跳过。
 
 ## 主题定制
 
@@ -156,7 +222,7 @@ const { emojiLists } = require('mk-emoji-picker/emoji-list');
 ```bash
 npm ci          # 安装 esbuild / eslint / jsdom
 npm run build   # 清理并重建 dist/（IIFE / ESM / CJS / CSS + sourcemap）
-npm test        # node:test（jsdom 单元 + 无头浏览器布局冒烟）
+npm test        # pretest 自动重建 dist，再跑 node:test（jsdom 单元 + 无头浏览器布局冒烟）
 npm run lint    # ESLint 9 flat config
 npm run check   # lint + test + build
 ```

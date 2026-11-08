@@ -23,6 +23,7 @@
   },
   "files": [
     "dist",
+    "server",
     "README.md",
     "LICENSE"
   ],
@@ -32,8 +33,9 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "test": "node --test test/api.test.js test/layout.test.js test/lazyload.test.js test/page.test.js test/parse.test.js",
-    "check": "npm run lint && npm test && npm run build",
+    "pretest": "npm run build",
+    "test": "node --test test/api.test.js test/layout.test.js test/lazyload.test.js test/page.test.js test/parse.test.js test/server.test.js",
+    "check": "npm run lint && npm test",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

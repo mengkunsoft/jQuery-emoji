@@ -28,3 +28,27 @@ jobs:
       # dist 由构建生成并提交，防止源码与产物不同步
       - name: dist 必须与源码同步
         run: git diff --exit-code --ignore-space-at-eol -- dist
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: none
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm ci
+      - run: npm run build
+      - name: PHP / Java 与前端解析一致性
+        env:
+          MKEP_REQUIRE_PHP: '1'
+          MKEP_REQUIRE_JAVA: '1'
+        run: node --test test/server.test.js

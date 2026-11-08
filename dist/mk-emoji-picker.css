@@ -234,8 +234,7 @@
 
 /* 插入到可编辑区域 / 由 parse() 生成的图片 */
 .mkep-icon,
-.mkep-smiley,
-.wp-smiley {
+.mkep-smiley {
     inline-size: auto;
     block-size: 26px;
     max-block-size: none;

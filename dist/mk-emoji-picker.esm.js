@@ -530,6 +530,17 @@ function buildRule(group, basePath, index) {
     file: group.file || ".jpg"
   };
 }
+function normalizeClasses(value) {
+  const list = Array.isArray(value) ? value : [value];
+  const classes = [];
+  for (const item of list) {
+    if (typeof item !== "string") continue;
+    for (const name of item.trim().split(/\s+/)) {
+      if (name && !classes.includes(name)) classes.push(name);
+    }
+  }
+  return classes;
+}
 function collectTextNodes(root, list) {
   for (const child of Array.from(root.childNodes)) {
     if (child.nodeType === 3) {
@@ -539,7 +550,7 @@ function collectTextNodes(root, list) {
     }
   }
 }
-function replaceInTextNode(node, rules, doc) {
+function replaceInTextNode(node, rules, doc, classNames = []) {
   const text = node.nodeValue;
   const hits = [];
   for (const rule of rules) {
@@ -577,13 +588,14 @@ function replaceInTextNode(node, rules, doc) {
     if (hit.start > cursor) {
       frag.appendChild(doc.createTextNode(text.slice(cursor, hit.start)));
     }
-    const img = el(doc, "img", "mkep-smiley wp-smiley", {
+    const img = el(doc, "img", "mkep-smiley", {
       src: hit.rule.path + hit.file + hit.rule.file,
       alt: hit.rule.named ? hit.alias : "",
       loading: "lazy",
       decoding: "async"
     });
     if (hit.rule.named) img.setAttribute("title", hit.alias);
+    if (classNames.length) img.classList.add(...classNames);
     frag.appendChild(img);
     cursor = hit.end;
   }
@@ -602,9 +614,10 @@ function parse(target, options = {}) {
   const basePath = typeof options.basePath === "string" ? options.basePath : "";
   const rules = groups.map((group, i) => buildRule(group, basePath, i)).filter(Boolean);
   if (!rules.length) return root;
+  const classNames = normalizeClasses(options.className);
   const nodes = [];
   collectTextNodes(root, nodes);
-  for (const node of nodes) replaceInTextNode(node, rules, doc);
+  for (const node of nodes) replaceInTextNode(node, rules, doc, classNames);
   root.setAttribute(PARSED_ATTR, "1");
   return root;
 }

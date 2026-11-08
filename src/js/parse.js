@@ -68,6 +68,19 @@ function buildRule(group, basePath, index) {
     };
 }
 
+/** options.className 支持空格分隔的字符串或字符串数组，过滤空值与非字符串。 */
+function normalizeClasses(value) {
+    const list = Array.isArray(value) ? value : [value];
+    const classes = [];
+    for (const item of list) {
+        if (typeof item !== 'string') continue;
+        for (const name of item.trim().split(/\s+/)) {
+            if (name && !classes.includes(name)) classes.push(name);
+        }
+    }
+    return classes;
+}
+
 function collectTextNodes(root, list) {
     for (const child of Array.from(root.childNodes)) {
         if (child.nodeType === 3) {
@@ -79,7 +92,7 @@ function collectTextNodes(root, list) {
 }
 
 /** 在单个文本节点内找出所有代码，按位置去重后一次性替换。 */
-function replaceInTextNode(node, rules, doc) {
+function replaceInTextNode(node, rules, doc, classNames = []) {
     const text = node.nodeValue;
     const hits = [];
 
@@ -119,14 +132,14 @@ function replaceInTextNode(node, rules, doc) {
         if (hit.start > cursor) {
             frag.appendChild(doc.createTextNode(text.slice(cursor, hit.start)));
         }
-        // wp-smiley 作为兼容钩子保留，方便旧样式继续生效
-        const img = el(doc, 'img', 'mkep-smiley wp-smiley', {
+        const img = el(doc, 'img', 'mkep-smiley', {
             src: hit.rule.path + hit.file + hit.rule.file,
             alt: hit.rule.named ? hit.alias : '',
             loading: 'lazy',
             decoding: 'async'
         });
         if (hit.rule.named) img.setAttribute('title', hit.alias);
+        if (classNames.length) img.classList.add(...classNames);
         frag.appendChild(img);
         cursor = hit.end;
     }
@@ -138,6 +151,7 @@ function replaceInTextNode(node, rules, doc) {
 
 /**
  * 解析一个元素内的表情代码，返回该元素（便于链式调用）。
+ * 生成的图片带 mkep-smiley 类，可通过 options.className 追加自定义类。
  * 默认每个元素只解析一次；options.force = true 可强制重新解析。
  */
 export function parse(target, options = {}) {
@@ -152,9 +166,10 @@ export function parse(target, options = {}) {
     const rules = groups.map((group, i) => buildRule(group, basePath, i)).filter(Boolean);
     if (!rules.length) return root;
 
+    const classNames = normalizeClasses(options.className);
     const nodes = [];
     collectTextNodes(root, nodes);
-    for (const node of nodes) replaceInTextNode(node, rules, doc);
+    for (const node of nodes) replaceInTextNode(node, rules, doc, classNames);
     root.setAttribute(PARSED_ATTR, '1');
     return root;
 }

@@ -3,9 +3,10 @@
  * 运行：npm run build
  */
 import { build } from 'esbuild';
-import { copyFile, mkdir, readFile, readdir, rm } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { emojiLists } from '../src/js/emoji-list.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
@@ -80,6 +81,13 @@ await build({
     legalComments: 'none',
     banner: { css: banner }
 });
+
+// 后端（PHP / Java）与前端共用的配置单一来源
+await writeFile(output('emoji-list.json'), JSON.stringify({
+    name: pkg.name,
+    version: pkg.version,
+    groups: emojiLists
+}, null, 2) + '\n', 'utf8');
 
 const files = (await readdir(dist)).sort();
 console.log(`\n[build] ${pkg.name}@${pkg.version} -> dist/ (${files.length} files)`);

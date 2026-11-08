@@ -13,6 +13,9 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
+# Java 本地编译产物
+*.class
+
 # 编辑器与操作系统文件
 .vscode/
 .idea/
@@ -27,6 +30,7 @@ ehthumbs.db
 !.env.example
 
 .codebuddy/
+.devdata/
 
 # 注意：dist/ 与 package-lock.json 必须提交，不要加入忽略。
 # dist/ 供 index.html 与测试探针直接引用，CI 会校验其与源码同步；

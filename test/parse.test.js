@@ -11,13 +11,14 @@ const require = createRequire(import.meta.url);
 const esm = await import('../dist/mk-emoji-picker.esm.js');
 const cjs = require('../dist/mk-emoji-picker.cjs');
 
-function parseBox(v, html, icons, basePath) {
+function parseBox(v, html, icons, basePath, extra = {}) {
     const box = v.doc.createElement('div');
     box.innerHTML = html;
     v.doc.body.appendChild(box);
     v.parse(box, {
         basePath: basePath === undefined ? 'images/emoji' : basePath,
-        icons: icons || v.lists
+        icons: icons || v.lists,
+        ...extra
     });
     return box;
 }
@@ -117,6 +118,28 @@ function runCases(v) {
     assert.equal(again.getAttribute('data-mkep-parsed'), '1');
     v.parse(again, { basePath: 'images/emoji', icons: v.lists, force: true });
     assert.equal(srcOf(again).length, 2, 'force 重新解析不应产生重复图片');
+
+    // 10. 不再生成 wp-smiley，支持追加自定义 class
+    const plain = parseBox(v, '<p>[微笑]</p>');
+    assert.equal(plain.querySelector('img').className, 'mkep-smiley', '只保留库自身的类名');
+
+    const styled = parseBox(v, '<p>[微笑]</p>', undefined, undefined,
+        { className: 'comment-emoji  rounded ' });
+    const styledImg = styled.querySelector('img');
+    assert(styledImg.classList.contains('mkep-smiley'));
+    assert(styledImg.classList.contains('comment-emoji'));
+    assert(styledImg.classList.contains('rounded'));
+    assert.equal(styledImg.classList.contains('wp-smiley'), false);
+
+    const arrayed = parseBox(v, '<p>[微笑]</p>', undefined, undefined,
+        { className: ['a', 'mkep-smiley', 'b', null, 42] });
+    assert.deepEqual(Array.from(arrayed.querySelector('img').classList).sort(),
+        ['a', 'b', 'mkep-smiley'], '数组形式应生效并去重，非法值忽略');
+
+    const legacy = parseBox(v, '<p>[微笑]</p>', undefined, undefined,
+        { className: 'wp-smiley' });
+    assert(legacy.querySelector('img').classList.contains('wp-smiley'),
+        '需要旧样式时可通过 className 显式恢复');
 }
 
 function makeVariants() {
