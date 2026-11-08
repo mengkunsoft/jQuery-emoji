@@ -3,45 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <title>plugin probe</title>
-<!-- 真实插件探针：点击按钮打开面板，检查 Grid 是否生效、定位是否被 JS 覆盖、懒加载数量 -->
-<link rel="stylesheet" href="../dist/css/jquery.emoji.css">
+<!-- 真实插件探针：点击按钮打开面板，检查 Grid、定位与懒加载数量 -->
+<link rel="stylesheet" href="../dist/mk-emoji-picker.css">
 <style>body{margin:0}</style>
 </head>
 <body>
 <textarea id="content"></textarea>
-<button id="btn"></button>
-<script src="../lib/script/jquery.min.js"></script>
-<script src="../src/js/jquery.emoji.js"></script>
-<script src="../src/js/emoji.list.js"></script>
+<button id="btn" type="button"></button>
+<script src="../dist/mk-emoji-picker.js"></script>
+<script src="../dist/emoji-list.js"></script>
 <script>
-$(function () {
-    $('#content').emoji({
+(function () {
+    var picker = MkEmojiPicker.create('#content', {
         button: '#btn',
         animation: 'none',
         basePath: '../images/emoji',
-        icons: emojiLists
+        icons: mkEmojiLists
     });
-    $('#btn').trigger('click');
-    var c = $('#emoji_container_1');
-    var total = c.find('.emoji_icons img[data-src]').length;
-    var proto = $.fn.emoji.Constructor.prototype;
-    var inst = Object.create(proto);
-    inst.index = 1;
-    inst._loadVisibleEmoji();
-    var loaded = c.find('.emoji_icons img:not([data-src])').length;
-    var ul = c.find('.emoji_icons:visible ul')[0];
-    var cell = c.find('.emoji_icons:visible li')[0].getBoundingClientRect();
+    document.getElementById('btn').click();
+    picker.loadVisible();
+    var c = document.querySelector('.mkep-panel');
+    var group = c.querySelector('.mkep-group:not([hidden])');
+    var ul = group.querySelector('.mkep-grid');
+    var cell = group.querySelector('.mkep-cell').getBoundingClientRect();
     document.title = 'RESULT:' + JSON.stringify({
         viewport: window.innerWidth,
-        total: total,
-        loaded: loaded,
+        total: c.querySelectorAll('.mkep-grid img[data-src]').length,
+        loaded: c.querySelectorAll('.mkep-grid img:not([data-src])').length,
         grid: getComputedStyle(ul).display,
-        container: +c[0].getBoundingClientRect().width.toFixed(1),
+        container: +c.getBoundingClientRect().width.toFixed(1),
         cellW: +cell.width.toFixed(1),
         cellH: +cell.height.toFixed(1),
-        inlineLeft: c[0].style.left
+        inlineLeft: c.style.left
     });
-});
+})();
 </script>
 </body>
 </html>

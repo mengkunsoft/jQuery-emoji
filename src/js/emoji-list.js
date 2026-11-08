@@ -1,4 +1,5 @@
-var emojiLists = [
+/** 内置表情分组配置，与 images/emoji/ 下的图片资源对应。 */
+export const emojiLists = [
     {
         name: "阿鲁",
         path: "aru/",
@@ -386,3 +387,5 @@ var emojiLists = [
         }
     }
 ];
+
+export default emojiLists;

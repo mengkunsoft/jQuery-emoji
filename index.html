@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="jQuery-emoji：让 textarea 或可编辑 div 具备插入表情功能，支持多分组切换、表情代码转换、按需加载与响应式面板。">
+<meta name="description" content="mk-emoji-picker：零依赖的原生 JavaScript 表情选择面板，支持 textarea 与 contenteditable、多分组切换、表情代码解析、按需加载与响应式布局。">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#4f46e5">
-<title>jQuery-emoji · 让输入框拥有表情能力</title>
+<title>mk-emoji-picker · 零依赖表情选择面板</title>
 <script>
 (function () {
     var dark = false;
@@ -19,15 +19,15 @@
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
 })();
 </script>
-<link rel="stylesheet" href="dist/css/jquery.emoji.css">
-<link rel="stylesheet" href="dist/css/index.css">
+<link rel="stylesheet" href="dist/mk-emoji-picker.css">
+<link rel="stylesheet" href="src/css/docs.css">
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
 
 <nav class="site-nav" aria-label="主导航">
     <div class="nav-inner">
-        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">:)</span>jQuery-emoji</a>
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">:)</span>mk-emoji-picker</a>
         <div class="nav-links">
             <a href="#about">说明</a>
             <a href="#features">功能</a>
@@ -35,6 +35,8 @@
             <a href="#usage">使用</a>
             <a href="#options">参数</a>
             <a href="#methods">方法</a>
+            <a href="#theme">主题</a>
+            <a href="#migration">迁移</a>
         </div>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色模式">
             <span id="themeIcon" aria-hidden="true">◐</span><span id="themeLabel">深色</span>
@@ -44,18 +46,18 @@
 
 <header class="hero" id="top">
     <div class="hero-inner">
-        <p class="eyebrow">轻量 jQuery 插件 · 开箱即用</p>
-        <h1>jQuery-emoji</h1>
+        <p class="eyebrow">零依赖 · 原生 JavaScript · 开箱即用</p>
+        <h1>mk-emoji-picker</h1>
         <p class="tagline">让文本框或可编辑 div 拥有插入表情的能力。自动识别元素类型，支持多分组切换、表情代码转换与同一页面多实例。</p>
         <div class="hero-actions">
             <a class="btn primary" href="#demo">在线体验</a>
-            <a class="btn ghost" href="https://github.com/mengkunsoft/jQuery-emoji" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
+            <a class="btn ghost" href="https://github.com/mengkunsoft/mk-emoji-picker" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
         </div>
         <p class="hero-meta">
+            <span>无 jQuery / 无框架依赖</span>
             <span>500+ 内置表情</span>
             <span>可视区域按需加载</span>
-            <span>响应式面板 / 小屏优化</span>
-            <span>无外部网络依赖</span>
+            <span>ESM / CJS / IIFE</span>
         </p>
     </div>
 </header>
@@ -65,28 +67,27 @@
         <div class="section-head">
             <p class="kicker">About</p>
             <h2 id="about-title">说明</h2>
-            <p>此插件在 <a href="https://github.com/eshengsky/jQuery-emoji" target="_blank" rel="noopener noreferrer">@eshengsky</a> 的基础上修改而来。</p>
+            <p>v2 已全面重写为原生 JavaScript，不再依赖 jQuery，并由 esbuild 自动构建发布。</p>
         </div>
         <div class="grid cols-2">
             <article class="card">
-                <h3>相对原版的改动</h3>
+                <h3>相对 v1 的变化</h3>
                 <ul>
-                    <li>新增表情列表根文件目录设置</li>
-                    <li>删除对 mCustomScrollbar 的依赖</li>
-                    <li>更改表情配置方式</li>
-                    <li>修改表情预览框位置的判定方式</li>
-                    <li>增加对移动端的兼容</li>
-                    <li>整合了贴吧、QQ、微博、阿鲁全套表情</li>
+                    <li>移除 jQuery 与 mCustomScrollbar 等全部运行时依赖</li>
+                    <li>源码拆分为 ESM 模块，产出 IIFE / ESM / CJS 与 CSS</li>
+                    <li>新 API：<code>create()</code> / <code>parse()</code> / <code>destroy()</code></li>
+                    <li>面板类名统一为 <code>.mkep-*</code> 前缀，避免全局污染</li>
+                    <li>Grunt 换成 esbuild，GitHub Release 自动构建产物</li>
                 </ul>
             </article>
             <article class="card">
-                <h3>近期优化</h3>
+                <h3>保留的能力</h3>
                 <ul>
-                    <li>表情图片按可视区域懒加载，打开面板不再一次性请求全部图片</li>
-                    <li>面板网格列宽随容器自适应，消除每行右侧留白</li>
-                    <li>小屏幕自动缩小格子，切换分组时回到顶部</li>
-                    <li>图片文件名统一为拼音，避免不同系统下的编码问题</li>
-                    <li>文档页重构为语义化结构，支持深色模式与响应式布局</li>
+                    <li>表情图片按可视区域懒加载</li>
+                    <li>面板网格随容器自适应，消除每行右侧留白</li>
+                    <li>小屏自动缩小格子，切换分组时回到顶部</li>
+                    <li>贴吧、QQ、微博、阿鲁全套表情与拼音文件名</li>
+                    <li>文档页语义化结构、深色模式与响应式布局</li>
                 </ul>
             </article>
         </div>
@@ -96,23 +97,23 @@
         <div class="section-head">
             <p class="kicker">Features</p>
             <h2 id="features-title">功能</h2>
-            <p>一个依赖 jQuery 的轻量插件，可用于表单输入、评论框与富文本编辑区域。</p>
+            <p>一个零依赖的轻量组件，可用于表单输入、评论框与富文本编辑区域。</p>
         </div>
         <div class="grid cols-2">
             <article class="card list-card">
                 <ul>
-                    <li>支持给 textarea 或可编辑 div 加上表情功能，自动识别元素类型。<br><span class="en">Support for adding emoji into textarea or editable div, automatic identification of element types.</span></li>
-                    <li>如果是 textarea，选择表情后插入表情代码；如果是可编辑 div，则直接插入表情图片。<br><span class="en">Insert code string for textarea, or the emoji picture for editable div.</span></li>
-                    <li>支持自定义表情代码的格式。<br><span class="en">Support for specifying the code format of emoji.</span></li>
-                    <li>支持将表情代码转换为表情图片。<br><span class="en">Support for converting the code string of emoji into emoji picture.</span></li>
+                    <li>支持给 <code>textarea</code> 或可编辑 div 加上表情功能，自动识别元素类型。<br><span class="en">Support for textarea and contenteditable.</span></li>
+                    <li><code>textarea</code> 插入表情代码，可编辑 div 直接插入表情图片。<br><span class="en">Insert code or image depending on the field type.</span></li>
+                    <li>支持自定义表情代码格式，占位符中的正则元字符按字面量匹配。<br><span class="en">Fully customizable placeholder.</span></li>
+                    <li>支持把文本中的表情代码转换为图片，只处理正文文本节点。<br><span class="en">Parse codes into images without touching scripts or attributes.</span></li>
                 </ul>
             </article>
             <article class="card list-card">
                 <ul>
-                    <li>支持多组表情并提供 Tab 切换。<br><span class="en">Support for multiple groups of emoji and tabs to toggle.</span></li>
-                    <li>示例已带有 QQ、贴吧、微博、阿鲁全套表情。</li>
-                    <li>同一页面支持多个表情实例。<br><span class="en">Support for multiple instances in one page.</span></li>
-                    <li>表情图片按需加载，网格随容器宽度自适应，移动端可用。<br><span class="en">Lazy-loaded images and responsive grid for small screens.</span></li>
+                    <li>支持多组表情并提供 Tab 切换，Tab 使用原生 <code>button</code> 与 ARIA 角色。<br><span class="en">Multiple groups with accessible tabs.</span></li>
+                    <li>同一页面支持多个实例，<code>destroy()</code> 会解绑全部事件。<br><span class="en">Multiple instances with explicit teardown.</span></li>
+                    <li>表情图片按需加载，网格随容器宽度自适应，移动端可用。<br><span class="en">Lazy-loaded images and responsive grid.</span></li>
+                    <li>支持深色模式、减少动态效果、键盘焦点与 Esc 关闭。<br><span class="en">Dark mode, reduced motion and keyboard support.</span></li>
                 </ul>
             </article>
         </div>
@@ -140,12 +141,12 @@
                     <h3 class="demo-title"><span class="num" aria-hidden="true">JS</span>代码 code</h3>
                     <figure class="code-block">
                         <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                        <pre><code class="javascript">$("#content").emoji({
-    button: "#btnOpen1",
+                        <pre><code class="javascript">MkEmojiPicker.create('#content', {
+    button: '#btnOpen1',
     showTab: true,
     animation: 'fade',
     basePath: 'images/emoji',
-    icons: emojiLists
+    icons: window.mkEmojiLists
 });</code></pre>
                     </figure>
                 </div>
@@ -167,12 +168,12 @@
                     <h3 class="demo-title"><span class="num" aria-hidden="true">JS</span>代码 code</h3>
                     <figure class="code-block">
                         <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                        <pre><code class="javascript">$("#editor").emoji({
-    button: "#btn",
+                        <pre><code class="javascript">MkEmojiPicker.create('#editor', {
+    button: '#btn',
     showTab: false,
     animation: 'slide',
     basePath: 'images/emoji',
-    icons: emojiLists
+    icons: window.mkEmojiLists
 });</code></pre>
                     </figure>
                 </div>
@@ -188,15 +189,15 @@
                     <div class="demo-actions">
                         <button class="btn" type="button" id="btnParse">转换 parse</button>
                     </div>
-                    <p class="demo-hint">转换只会执行一次，避免重复替换。</p>
+                    <p class="demo-hint">同一元素默认只解析一次，不会重复替换。</p>
                 </div>
                 <div class="demo-pane">
                     <h3 class="demo-title"><span class="num" aria-hidden="true">JS</span>代码 code</h3>
                     <figure class="code-block">
                         <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                        <pre><code class="javascript">$("#sourceText").emojiParse({
+                        <pre><code class="javascript">MkEmojiPicker.parse('#sourceText', {
     basePath: 'images/emoji',
-    icons: emojiLists
+    icons: window.mkEmojiLists
 });</code></pre>
                     </figure>
                 </div>
@@ -208,39 +209,39 @@
         <div class="section-head">
             <p class="kicker">Usage</p>
             <h2 id="usage-title">使用</h2>
-            <p>无需构建步骤，引入样式与脚本后即可调用。</p>
+            <p>无需构建步骤，引入样式与脚本后即可调用；也支持 npm 与 ESM。</p>
         </div>
         <div class="grid cols-2">
             <article class="card">
                 <h3>安装 install</h3>
-                <p>克隆仓库后直接引用 <code>dist/</code> 下的文件。</p>
                 <figure class="code-block">
                     <figcaption><span>Bash</span><button class="copy-btn" type="button">复制</button></figcaption>
-                    <pre><code class="bash">git clone https://github.com/mengkunsoft/jQuery-emoji.git</code></pre>
+                    <pre><code class="bash">npm install mk-emoji-picker</code></pre>
                 </figure>
             </article>
             <article class="card">
                 <h3>调用 invoke</h3>
-                <p>在文本框或可编辑 div 上初始化表情。<br><span class="en">initialize emoji on textarea or editable div</span></p>
                 <figure class="code-block">
                     <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                    <pre><code class="javascript">$("#content").emoji(options);</code></pre>
+                    <pre><code class="javascript">import { create, parse } from 'mk-emoji-picker';
+import 'mk-emoji-picker/style.css';
+
+const picker = create('#content', options);</code></pre>
                 </figure>
             </article>
         </div>
         <article class="card mt">
-            <h3>引用 reference</h3>
-            <p>在 <code>&lt;head&gt;</code> 中引入样式，在 <code>&lt;/body&gt;</code> 前按顺序引入脚本。本页为便于调试使用 <code>src/</code>，正式使用推荐 <code>dist/</code>。</p>
+            <h3>浏览器直接引用 reference</h3>
+            <p>本页即使用下面的 <code>dist/</code> 产物，可直接以 <code>file://</code> 打开，无需本地服务器。</p>
             <figure class="code-block">
                 <figcaption><span>HTML</span><button class="copy-btn" type="button">复制</button></figcaption>
                 <pre><code class="html">&lt;head&gt;
-    &lt;link rel="stylesheet" href="dist/css/jquery.emoji.css"&gt;
+    &lt;link rel="stylesheet" href="dist/mk-emoji-picker.css"&gt;
 &lt;/head&gt;
 &lt;body&gt;
     ...
-    &lt;script src="lib/script/jquery.min.js"&gt;&lt;/script&gt;
-    &lt;script src="dist/js/jquery.emoji.min.js"&gt;&lt;/script&gt;
-    &lt;script src="dist/js/emoji.list.js"&gt;&lt;/script&gt;
+    &lt;script src="dist/mk-emoji-picker.js"&gt;&lt;/script&gt;
+    &lt;script src="dist/emoji-list.js"&gt;&lt;/script&gt;
 &lt;/body&gt;</code></pre>
             </figure>
         </article>
@@ -250,7 +251,7 @@
         <div class="section-head">
             <p class="kicker">Options</p>
             <h2 id="options-title">参数</h2>
-            <p>调用 <code>.emoji(options)</code> 时可传入以下配置。</p>
+            <p>调用 <code>create(target, options)</code> 时可传入以下配置。</p>
         </div>
         <div class="table-wrap">
             <table>
@@ -265,75 +266,93 @@
                 <tbody>
                     <tr>
                         <th scope="row"><code>button</code></th>
-                        <td><span class="badge">String</span></td>
-                        <td>—</td>
-                        <td>触发表情面板的按钮选择器，如 <code>"#btn1"</code>；指定则将面板绑定到该按钮，未指定则自动创建一个按钮。<br><span class="en">button selector; if empty, a button is created automatically.</span></td>
+                        <td><span class="badge">Element / String</span></td>
+                        <td><code>null</code></td>
+                        <td>触发面板的按钮；不指定则自动创建一个按钮。<br><span class="en">trigger button; auto-created when empty.</span></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>container</code></th>
+                        <td><span class="badge">Element / String</span></td>
+                        <td><code>document.body</code></td>
+                        <td>面板与自动按钮的挂载容器。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>showTab</code></th>
                         <td><span class="badge">Boolean</span></td>
                         <td><code>true</code></td>
-                        <td>当只有一组表情时，是否仍然显示 Tab。<br><span class="en">if show tab when only one emoji group.</span></td>
+                        <td>只有一组表情时是否仍然显示 Tab。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>animation</code></th>
                         <td><span class="badge">String</span></td>
                         <td><code>'fade'</code></td>
-                        <td>表情面板动画效果：<code>'fade'</code> 淡入淡出、<code>'slide'</code> 滚动、<code>'none'</code> 无动画。<br><span class="en">'fade': fade-in fade-out, 'slide': slide up &amp; down, 'none': no animation.</span></td>
+                        <td><code>'fade'</code> / <code>'slide'</code> / <code>'none'</code>；系统开启减少动态效果时自动禁用。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>basePath</code></th>
                         <td><span class="badge">String</span></td>
-                        <td>—</td>
-                        <td>表情图片文件的根路径。</td>
+                        <td><code>''</code></td>
+                        <td>表情图片文件的根路径，如 <code>'images/emoji'</code>。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>icons</code></th>
                         <td><span class="badge">Array</span></td>
                         <td><code>[]</code></td>
-                        <td>表情组。<br><span class="en">icons group.</span></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><code>icons:{ name }</code></th>
-                        <td><span class="badge">String</span></td>
-                        <td><code>group(<i>n</i>)</code></td>
-                        <td>该组表情名称。<br><span class="en">the name of the icons group.</span></td>
+                        <td><strong>必填。</strong>表情分组配置。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>icons:{ path }</code></th>
                         <td><span class="badge">String</span></td>
                         <td>—</td>
-                        <td><strong>必填。</strong>该组表情路径（最终路径 = <code>basePath</code> + 这里的独立路径）。<br><span class="en">required. the path of the icons group.</span></td>
+                        <td><strong>必填。</strong>该组子目录；最终路径 = <code>basePath</code> + 该路径 + 文件名 + 后缀。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>icons:{ name }</code></th>
+                        <td><span class="badge">String</span></td>
+                        <td><code>group(n)</code></td>
+                        <td>Tab 上显示的分组名称。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>icons:{ maxNum }</code></th>
                         <td><span class="badge">Number</span></td>
                         <td>—</td>
-                        <td><strong>未配置 <code>icons:{ emoji }</code> 时必填。</strong>该组表情文件名的最大数。<br><span class="en">required. the max number of the icons group file name.</span></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><code>icons:{ excludeNums }</code></th>
-                        <td><span class="badge">Array</span></td>
-                        <td><code>[]</code></td>
-                        <td>要排除的表情文件集合。<br><span class="en">the exclude icon files.</span></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><code>icons:{ file }</code></th>
-                        <td><span class="badge">String</span></td>
-                        <td><code>'.jpg'</code></td>
-                        <td>表情文件的后缀名。<br><span class="en">the icon file extension.</span></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><code>icons:{ placeholder }</code></th>
-                        <td><span class="badge">String</span></td>
-                        <td><code>'#em(<i>n</i>)_{alias}#'</code></td>
-                        <td>该组表情插入文本框后的占位标识，必须包含 <code>{alias}</code>，会被替换成每个表情的标识。<br><span class="en">the placeholder, must contain '{alias}'.</span></td>
+                        <td>未配置 <code>icons:{ emoji }</code> 时<strong>必填</strong>，按数字文件名生成。</td>
                     </tr>
                     <tr>
                         <th scope="row"><code>icons:{ emoji }</code></th>
                         <td><span class="badge">Object</span></td>
                         <td>—</td>
-                        <td>每个表情的名字与对应文件名，格式如 <code>{"表情一":"pic1", "表情二":"pic2"}</code>。</td>
+                        <td><code>{"微笑": "weixiao"}</code> 形式的显示名 → 文件名映射。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>icons:{ placeholder }</code></th>
+                        <td><span class="badge">String</span></td>
+                        <td><code>'#em(n)_{alias}#'</code></td>
+                        <td>插入文本框的代码模板，必须包含 <code>{alias}</code>。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>icons:{ excludeNums }</code></th>
+                        <td><span class="badge">Array</span></td>
+                        <td><code>[]</code></td>
+                        <td>要跳过的序号集合。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>icons:{ file }</code></th>
+                        <td><span class="badge">String</span></td>
+                        <td><code>'.jpg'</code></td>
+                        <td>表情文件后缀名。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>onSelect</code></th>
+                        <td><span class="badge">Function</span></td>
+                        <td><code>null</code></td>
+                        <td><code>(code, src) =&gt; {}</code>，选中表情后触发。</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><code>onShow / onHide</code></th>
+                        <td><span class="badge">Function</span></td>
+                        <td><code>null</code></td>
+                        <td>面板显示 / 隐藏动画结束后触发。</td>
                     </tr>
                 </tbody>
             </table>
@@ -345,52 +364,103 @@
         <div class="section-head">
             <p class="kicker">Methods</p>
             <h2 id="methods-title">方法</h2>
-            <p>初始化之后可通过字符串参数调用以下方法。</p>
+            <p>全部能力由两个顶层函数与实例方法提供。</p>
         </div>
         <div class="grid cols-3">
             <article class="card method-card">
-                <h3>.emoji(options);</h3>
-                <p>初始化表情。<br><span class="en">initialize emoji.</span></p>
+                <h3>create(target, options)</h3>
+                <p>创建 / 复用表情面板实例。</p>
                 <figure class="code-block">
                     <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                    <pre><code class="javascript">// 代码见上述示例</code></pre>
+                    <pre><code class="javascript">const picker = MkEmojiPicker.create('#content', {
+    basePath: 'images/emoji',
+    icons: window.mkEmojiLists
+});</code></pre>
                 </figure>
             </article>
             <article class="card method-card">
-                <h3>.emoji('show');</h3>
-                <p>显示表情面板。<br><span class="en">show emoji panel.</span></p>
+                <h3>parse(target, options)</h3>
+                <p>把表情代码转换成图片。</p>
                 <figure class="code-block">
                     <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                    <pre><code class="javascript">$("#editor").emoji('show');</code></pre>
+                    <pre><code class="javascript">MkEmojiPicker.parse('#sourceText', {
+    basePath: 'images/emoji',
+    icons: window.mkEmojiLists
+});</code></pre>
                 </figure>
             </article>
             <article class="card method-card">
-                <h3>.emoji('hide'); / .emoji('toggle');</h3>
-                <p>隐藏 / 切换显示隐藏表情面板。<br><span class="en">hide or toggle emoji panel.</span></p>
+                <h3>实例方法</h3>
+                <p>动画方法返回 Promise。</p>
                 <figure class="code-block">
                     <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
-                    <pre><code class="javascript">$("#editor").emoji('hide');
-$("#editor").emoji('toggle');</code></pre>
+                    <pre><code class="javascript">await picker.show();
+await picker.hide();
+picker.toggle();
+picker.loadVisible();
+picker.destroy();</code></pre>
                 </figure>
             </article>
         </div>
     </section>
+
+    <section class="doc-section" id="theme" aria-labelledby="theme-title">
+        <div class="section-head">
+            <p class="kicker">Theme</p>
+            <h2 id="theme-title">主题定制</h2>
+            <p>组件外观全部由 CSS 变量控制，不需要修改源码。无 <code>data-theme</code> 时跟随系统偏好。</p>
+        </div>
+        <article class="card">
+            <figure class="code-block">
+                <figcaption><span>CSS</span><button class="copy-btn" type="button">复制</button></figcaption>
+                <pre><code class="css">.mkep-panel {
+    --mkep-bg: #1c2331;
+    --mkep-fg: #e8ecf4;
+    --mkep-accent: #7c74f2;
+    --mkep-cell: 48px;
+    --mkep-radius: 16px;
+    --mkep-duration: 120ms;
+}</code></pre>
+            </figure>
+        </article>
+    </section>
+
+    <section class="doc-section" id="migration" aria-labelledby="migration-title">
+        <div class="section-head">
+            <p class="kicker">Migration</p>
+            <h2 id="migration-title">从 v1 迁移</h2>
+            <p>v2 是破坏性升级：不再注册 jQuery 插件方法，类名也统一为 <code>.mkep-*</code> 前缀。</p>
+        </div>
+        <article class="card">
+            <figure class="code-block">
+                <figcaption><span>JavaScript</span><button class="copy-btn" type="button">复制</button></figcaption>
+                <pre><code class="javascript">// v1
+$('#content').emoji(options);
+$('#text').emojiParse(options);
+$('#editor').emoji('show');
+
+// v2
+const picker = MkEmojiPicker.create('#content', options);
+MkEmojiPicker.parse('#text', options);
+picker.show();
+// 不再使用时：picker.destroy();</code></pre>
+            </figure>
+            <p>配置项 <code>button</code> / <code>showTab</code> / <code>animation</code> / <code>basePath</code> / <code>icons</code> 保持兼容；全局表情列表由 <code>emojiLists</code> 改为 <code>window.mkEmojiLists</code>。完整对照表见 README。</p>
+        </article>
+    </section>
 </main>
 
 <footer class="site-footer">
-    <span>基于 <a href="https://github.com/eshengsky/jquery-emoji" target="_blank" rel="noopener noreferrer">jQuery-emoji</a> by <a href="https://github.com/eshengsky" target="_blank" rel="noopener noreferrer">eshengsky</a>，由 <a href="https://github.com/mengkunsoft" target="_blank" rel="noopener noreferrer">mengkunsoft</a> 修改维护。</span>
-    <span>MIT License</span>
+    <span>基于 <a href="https://github.com/eshengsky/jQuery-emoji" target="_blank" rel="noopener noreferrer">jQuery-emoji</a> by <a href="https://github.com/eshengsky" target="_blank" rel="noopener noreferrer">eshengsky</a>，由 <a href="https://github.com/mengkunsoft" target="_blank" rel="noopener noreferrer">mengkunsoft</a> 修改维护。</span>
+    <span>MIT License · v2.0.0</span>
 </footer>
 
-<script src="lib/script/jquery.min.js"></script>
-<script src="lib/script/highlight.pack.js"></script>
-<script src="src/js/jquery.emoji.js"></script>
-<script src="src/js/emoji.list.js"></script>
+<script src="dist/mk-emoji-picker.js"></script>
+<script src="dist/emoji-list.js"></script>
 <script>
 (function () {
     'use strict';
 
-    // 主题切换：默认跟随系统，手动切换后记入 localStorage
     var root = document.documentElement;
     var toggle = document.getElementById('themeToggle');
     var label = document.getElementById('themeLabel');
@@ -409,7 +479,6 @@ $("#editor").emoji('toggle');</code></pre>
         syncTheme();
     });
 
-    // 代码复制：优先 Clipboard API，file:// 下回退到 execCommand
     function fallbackCopy(text) {
         var ta = document.createElement('textarea');
         ta.value = text;
@@ -426,7 +495,6 @@ $("#editor").emoji('toggle');</code></pre>
     Array.prototype.forEach.call(document.querySelectorAll('.copy-btn'), function (btn) {
         btn.addEventListener('click', function () {
             var code = btn.closest('.code-block').querySelector('code');
-            var text = code.textContent;
             var done = function (ok) {
                 if (!ok) return;
                 var old = btn.textContent;
@@ -438,17 +506,16 @@ $("#editor").emoji('toggle');</code></pre>
                 }, 1600);
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(
+                navigator.clipboard.writeText(code.textContent).then(
                     function () { done(true); },
-                    function () { done(fallbackCopy(text)); }
+                    function () { done(fallbackCopy(code.textContent)); }
                 );
             } else {
-                done(fallbackCopy(text));
+                done(fallbackCopy(code.textContent));
             }
         });
     });
 
-    // 滚动时高亮当前章节
     if ('IntersectionObserver' in window) {
         var links = Array.prototype.slice.call(document.querySelectorAll('.nav-links a'));
         var byId = {};
@@ -465,34 +532,26 @@ $("#editor").emoji('toggle');</code></pre>
         });
     }
 
-    // 代码高亮
-    if (window.hljs) window.hljs.initHighlightingOnLoad();
-
-    if (!window.jQuery) return;
-    var $ = window.jQuery;
-    $(function () {
-        // 页面加载即初始化，避免重复点击生成多个面板
-        $('#content').emoji({
-            button: '#btnOpen1',
-            showTab: true,
-            animation: 'fade',
-            basePath: 'images/emoji',
-            icons: window.emojiLists
-        });
-        $('#editor').emoji({
-            button: '#btn',
-            showTab: false,
-            animation: 'slide',
-            basePath: 'images/emoji',
-            icons: window.emojiLists
-        });
-        $('#btnParse').on('click', function () {
-            $('#sourceText').emojiParse({
-                basePath: 'images/emoji',
-                icons: window.emojiLists
-            });
-            $(this).prop('disabled', true).text('已转换');
-        });
+    if (!window.MkEmojiPicker || !window.mkEmojiLists) return;
+    var icons = window.mkEmojiLists;
+    MkEmojiPicker.create('#content', {
+        button: '#btnOpen1',
+        showTab: true,
+        animation: 'fade',
+        basePath: 'images/emoji',
+        icons: icons
+    });
+    MkEmojiPicker.create('#editor', {
+        button: '#btn',
+        showTab: false,
+        animation: 'slide',
+        basePath: 'images/emoji',
+        icons: icons
+    });
+    document.getElementById('btnParse').addEventListener('click', function () {
+        MkEmojiPicker.parse('#sourceText', { basePath: 'images/emoji', icons: icons });
+        this.disabled = true;
+        this.textContent = '已转换';
     });
 })();
 </script>

@@ -1,0 +1,262 @@
+/*! mk-emoji-picker | MIT | 组件样式：所有外观都可通过 --mkep-* 自定义 */
+
+:where(.mkep-panel, .mkep-btn) {
+    --mkep-bg: #fff;
+    --mkep-bg-subtle: #f6f7f9;
+    --mkep-fg: #1c2536;
+    --mkep-muted: #667085;
+    --mkep-border: #e3e8f1;
+    --mkep-accent: #4f46e5;
+    --mkep-accent-fg: #fff;
+    --mkep-hover: #eceefb;
+    --mkep-cell: 54px;
+    --mkep-cell-h: 54px;
+    --mkep-radius: 12px;
+    --mkep-shadow: 0 4px 8px rgba(16, 24, 40, .06), 0 16px 40px rgba(16, 24, 40, .14);
+    --mkep-duration: 180ms;
+    --mkep-z: 1000;
+}
+
+/* 无 data-theme 时跟随系统；有 data-theme 时由宿主页面决定 */
+@media (prefers-color-scheme: dark) {
+    :where(:root:not([data-theme])) :where(.mkep-panel, .mkep-btn) {
+        --mkep-bg: #1c2331;
+        --mkep-bg-subtle: #242c3b;
+        --mkep-fg: #e8ecf4;
+        --mkep-muted: #9aa6bb;
+        --mkep-border: #333d50;
+        --mkep-accent: #7c74f2;
+        --mkep-hover: #2d3648;
+        --mkep-shadow: 0 4px 8px rgba(0, 0, 0, .3), 0 16px 40px rgba(0, 0, 0, .45);
+    }
+}
+
+:where(:root[data-theme="dark"]) :where(.mkep-panel, .mkep-btn) {
+    --mkep-bg: #1c2331;
+    --mkep-bg-subtle: #242c3b;
+    --mkep-fg: #e8ecf4;
+    --mkep-muted: #9aa6bb;
+    --mkep-border: #333d50;
+    --mkep-accent: #7c74f2;
+    --mkep-hover: #2d3648;
+    --mkep-shadow: 0 4px 8px rgba(0, 0, 0, .3), 0 16px 40px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+}
+
+.mkep-panel[hidden],
+.mkep-panel [hidden] {
+    display: none !important;
+}
+
+.mkep-panel,
+.mkep-panel * {
+    box-sizing: border-box;
+}
+
+.mkep-btn {
+    position: absolute;
+    z-index: var(--mkep-z);
+    inline-size: 28px;
+    block-size: 28px;
+    padding: 0;
+    border: 1px solid var(--mkep-border);
+    border-radius: 8px;
+    background: var(--mkep-bg);
+    color: var(--mkep-fg);
+    font: 600 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+    cursor: pointer;
+}
+
+.mkep-btn:hover,
+.mkep-btn:focus-visible {
+    border-color: var(--mkep-accent);
+}
+
+.mkep-btn:focus-visible,
+.mkep-item:focus-visible,
+.mkep-tab:focus-visible {
+    outline: 2px solid var(--mkep-accent);
+    outline-offset: 2px;
+}
+
+.mkep-panel {
+    position: absolute;
+    z-index: var(--mkep-z);
+    inset-inline: 0 10px; /* JS 会写入 inline left 覆盖这里的兜底值 */
+    max-inline-size: 520px;
+    overflow: hidden;
+    background: var(--mkep-bg);
+    color: var(--mkep-fg);
+    border: 1px solid var(--mkep-border);
+    border-radius: var(--mkep-radius);
+    box-shadow: var(--mkep-shadow);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    transition: opacity var(--mkep-duration) ease, transform var(--mkep-duration) ease;
+}
+
+.mkep-panel[data-animation="fade"] {
+    opacity: 0;
+}
+
+.mkep-panel[data-animation="slide"] {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.mkep-panel[data-animation="none"] {
+    transition: none;
+}
+
+.mkep-panel.is-open {
+    opacity: 1;
+    transform: none;
+}
+
+.mkep-content {
+    block-size: 277px;
+    padding: 5px;
+    padding-inline: 6px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+.mkep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--mkep-cell), 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--mkep-border);
+    border-inline-start: 1px solid var(--mkep-border);
+}
+
+.mkep-cell {
+    block-size: var(--mkep-cell-h);
+    border-inline-end: 1px solid var(--mkep-border);
+    border-block-end: 1px solid var(--mkep-border);
+}
+
+.mkep-item {
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.mkep-item:hover,
+.mkep-item:focus-visible {
+    background: var(--mkep-hover);
+}
+
+.mkep-item img {
+    max-inline-size: 100%;
+    max-block-size: 35px;
+    object-fit: contain;
+}
+
+.mkep-tabs {
+    border-block-start: 1px solid var(--mkep-border);
+    background: var(--mkep-bg-subtle);
+}
+
+.mkep-tabs__list {
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.mkep-tabs__items {
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    padding: 4px 8px;
+    list-style: none;
+}
+
+.mkep-tab {
+    flex: 0 0 auto;
+    max-inline-size: 12em;
+    overflow: hidden;
+    padding: 4px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--mkep-muted);
+    font: inherit;
+    font-size: 12px;
+    line-height: 22px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color var(--mkep-duration) ease, color var(--mkep-duration) ease;
+}
+
+.mkep-tab:hover {
+    background: var(--mkep-hover);
+}
+
+.mkep-tab.is-selected {
+    background: var(--mkep-accent);
+    color: var(--mkep-accent-fg);
+}
+
+.mkep-preview {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    inline-size: 65px;
+    block-size: 65px;
+    border: 1px solid var(--mkep-border);
+    border-radius: 50%;
+    background: var(--mkep-bg);
+    box-shadow: var(--mkep-shadow);
+    pointer-events: none;
+}
+
+.mkep-preview.is-flipped {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+}
+
+.mkep-preview img {
+    max-inline-size: 42px;
+    max-block-size: 42px;
+    object-fit: contain;
+}
+
+/* 插入到可编辑区域 / 由 parse() 生成的图片 */
+.mkep-icon,
+.mkep-smiley,
+.wp-smiley {
+    inline-size: auto;
+    block-size: 26px;
+    max-block-size: none;
+    border: 0;
+    box-shadow: none;
+    vertical-align: bottom;
+}
+
+@media (max-width: 576px) {
+    :where(.mkep-panel) {
+        --mkep-cell: 44px;
+        --mkep-cell-h: 46px;
+    }
+
+    .mkep-item img {
+        max-block-size: 30px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(.mkep-panel, .mkep-btn) {
+        --mkep-duration: 0ms;
+    }
+}

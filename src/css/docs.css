@@ -1,4 +1,4 @@
-/* jQuery-emoji 文档页：亮/暗主题、响应式、无外部字体与框架依赖 */
+/* mk-emoji-picker 文档页：亮/暗主题、响应式、无外部字体与框架依赖 */
 
 :root {
     color-scheme: light;
@@ -381,13 +381,8 @@ textarea:focus, .editable:focus {
     tab-size: 4;
 }
 .code-block code { padding: 0; border: 0; background: none; color: inherit; font-family: inherit; font-size: inherit; }
-.code-block .hljs-comment, .code-block .hljs-quote { color: #8190a8; font-style: italic; }
-.code-block .hljs-keyword, .code-block .hljs-selector-tag, .code-block .hljs-literal { color: #c4b5fd; }
-.code-block .hljs-string, .code-block .hljs-regexp, .code-block .hljs-addition { color: #86efac; }
-.code-block .hljs-number, .code-block .hljs-built_in, .code-block .hljs-type { color: #fdba74; }
-.code-block .hljs-title, .code-block .hljs-section { color: #93c5fd; }
-.code-block .hljs-attr, .code-block .hljs-attribute, .code-block .hljs-variable { color: #7dd3fc; }
-.code-block .hljs-tag, .code-block .hljs-name { color: #f9a8d4; }
+/* 代码块不依赖第三方高亮库，保持纯文本等宽显示 */
+.code-block code { color: var(--code-text); }
 
 /* 参数表 */
 .table-wrap {
@@ -443,15 +438,16 @@ textarea:focus, .editable:focus {
     font-size: .88rem;
 }
 
-/* 暗色主题下让插件面板融入页面 */
-:root[data-theme="dark"] .emoji_container { background-color: var(--surface); border-color: var(--border); }
-:root[data-theme="dark"] .emoji_tab { background-color: var(--surface-2); border-top-color: var(--border); color: var(--muted); }
-:root[data-theme="dark"] .emoji_tab_list ul li.selected { background: var(--brand); color: #fff; }
-:root[data-theme="dark"] .emoji_content ul,
-:root[data-theme="dark"] .emoji_content ul li,
-:root[data-theme="dark"] .emoji_content ul li a { border-color: var(--border); }
-:root[data-theme="dark"] .emoji_preview { background: var(--surface); border-color: var(--border); }
-:root[data-theme="dark"] .emoji_btn { filter: invert(1) opacity(.8); }
+/* 暗色主题下让组件面板融入页面：只覆盖变量，不改组件内部结构 */
+:root[data-theme="dark"] :where(.mkep-panel, .mkep-btn) {
+    --mkep-bg: var(--surface);
+    --mkep-bg-subtle: var(--surface-2);
+    --mkep-fg: var(--text);
+    --mkep-muted: var(--muted);
+    --mkep-border: var(--border);
+    --mkep-accent: var(--brand);
+    --mkep-hover: var(--surface-2);
+}
 
 @media (max-width: 860px) {
     .demo-body { grid-template-columns: minmax(0, 1fr); }

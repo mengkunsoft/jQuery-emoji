@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+      - name: 打包 dist
+        run: |
+          cd dist
+          zip -r ../mk-emoji-picker-dist.zip .
+
+      - name: 上传产物到 GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.js
+            dist/*.cjs
+            dist/*.css
+            dist/*.map
+            mk-emoji-picker-dist.zip
+
+      - name: 保存构建产物（手动触发时）
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mk-emoji-picker-dist
+          path: dist/
+
+      # 仓库配置了 NPM_TOKEN 时才发布，未配置则只产出 Release 资源
+      - name: 发布到 npm
+        if: env.HAS_NPM_TOKEN == 'true' && github.event_name == 'release'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

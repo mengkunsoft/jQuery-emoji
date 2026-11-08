@@ -1,11 +1,69 @@
 {
-  "name": "jQuery-emoji",
-  "version": "1.0.0",
+  "name": "mk-emoji-picker",
+  "version": "2.0.0",
+  "description": "A zero-dependency custom emoji picker for textarea and contenteditable, with emoticon-code parsing.",
+  "type": "module",
+  "main": "./dist/mk-emoji-picker.cjs",
+  "module": "./dist/mk-emoji-picker.esm.js",
+  "unpkg": "./dist/mk-emoji-picker.js",
+  "jsdelivr": "./dist/mk-emoji-picker.js",
+  "style": "./dist/mk-emoji-picker.css",
+  "exports": {
+    ".": {
+      "import": "./dist/mk-emoji-picker.esm.js",
+      "require": "./dist/mk-emoji-picker.cjs"
+    },
+    "./emoji-list": {
+      "import": "./dist/emoji-list.esm.js",
+      "require": "./dist/emoji-list.cjs"
+    },
+    "./style.css": "./dist/mk-emoji-picker.css",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "lint": "eslint .",
+    "test": "node --test test/api.test.js test/layout.test.js test/lazyload.test.js test/page.test.js test/parse.test.js",
+    "check": "npm run lint && npm test && npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "emoji",
+    "emoji-picker",
+    "emoticon",
+    "smiley",
+    "sticker",
+    "custom-emoji",
+    "textarea",
+    "contenteditable",
+    "vanilla-js",
+    "zero-dependency"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mengkunsoft/mk-emoji-picker.git"
+  },
+  "homepage": "https://github.com/mengkunsoft/mk-emoji-picker#readme",
+  "bugs": {
+    "url": "https://github.com/mengkunsoft/mk-emoji-picker/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-copy": "^0.8.2",
-    "grunt-contrib-jshint": "^0.11.3",
-    "grunt-contrib-uglify": "^0.11.0",
-    "grunt-contrib-watch": "^0.6.1"
+    "esbuild": "^0.24.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "jsdom": "^25.0.1"
   }
 }

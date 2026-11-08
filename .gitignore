@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+
+# 日志与本地调试产物
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# 本地打包 / 覆盖率产物
+*.tgz
+coverage/
+.nyc_output/
+
+# 编辑器与操作系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# 本地环境变量与凭据
+.env
+.env.*
+!.env.example
+
+.codebuddy/
+
+# 注意：dist/ 与 package-lock.json 必须提交，不要加入忽略。
+# dist/ 供 index.html 与测试探针直接引用，CI 会校验其与源码同步；
+# package-lock.json 供 GitHub Actions 中的 npm ci 使用。
